@@ -1,0 +1,133 @@
+TODO:
+
+cocktail predictors need to be foreground and background separately
+
+check that the range over which we are boosting is correct for mathlang (is -41
+to 210 correct, or should it be 0 to 300ish as the mathlang paper suggests)
+
+1/26/2022: the above two are done.
+
+Now, we need to
+- produce TRFs using the noise model
+- produce cocktail TRFs using the middle part of the stimulus/signals (to ensure 
+  that the foreground and background being briefly separated does not change
+  things).
+
+
+break up into best performing half and worst performing half (use t test)
+
+mixed effects linear model -- allow you to have different amounts of variability
+per subject
+
+askd joshua for lit review
+check google scholar
+Look at Gavin Bidelman -- he does a lot for eeg responses in this same freq range 
+ has been arguing for cortical and subcortical differences
+Emily Coffee(?) paper 2019 on FFR Nina Kraus is a coauthor. Have references to when this is done in noise.
+
+Ask Joshua for his opinion on venues
+
+intro
+methods
+results
+discussion
+
+Look in R: all permutations of mixed linear models (don't know if there is a correction applied) 
+ - buildmer
+
+take "or" of all significant portions in the TFCE test
+
+----------------------
+Preliminary results
+
+significant difference between speaker TRFs in the singlespeaker case (as expected)
+
+
+
+TODO:
+
+Need to run the james and kate cp math trf code
+
+Also need permuted predictors for all cp conditions
+
+Produce significant regions on all TRFs
+- can do now for ss conditions
+
+Need to run the following mixed effects tests:
+ss (does the speaker matter -- male vs female, should be significant):
+- james math vs kate math 5.99991e-05
+- james lang vs kate lang 5.99991e-05
+cp (does attention matter -- foreground vs background, could either be significant or not):
+- james math (fg) kate lang (bg) vs kate lang (fg) james math (bg) attended
+- james math (fg) kate lang (bg) vs kate lang (fg) james math (bg) unattended
+- james lang (fg) kate math (bg) vs kate math (fg) james lang (bg) attended
+- james lang (fg) kate math (bg) vs kate math (fg) james lang (bg) unattended
+
+two p-values for each experiment, so apply two Bonferroni corrections.
+
+
+
+Maybe redo mixed effects:
+power ~ 1+att+sex+type+(1|subj)
+power ~ 1+att+sex+type+att*sex+ ...
+
+need abstract by 26
+
+
+---- papers
+
+highgamma,
+
+mathlang
+
+high gamma range (not sure if this source is appropriate)
+
+yin (fundamental frequency estimator)
+
+eelbrain
+
+- neural mechanisms of FFR in cortex: https://www.eneuro.org/content/8/6/ENEURO.0451-21.2021
+- EEG f0 tracking of speech (TRF method) preference for male speakers https://onlinelibrary.wiley.com/doi/full/10.1111/ejn.15229
+- partner paper to the one above https://ieeexplore.ieee.org/abstract/document/9430705
+- cortical FFR preference for male speakers (see FIg 6 here) https://www.sciencedirect.com/science/article/pii/S1053811920310302
+- attentional effect of cortical FFR (you also find a slight attentional effect right?)  https://www.sciencedirect.com/science/article/pii/S1053811919307761
+
+- Brodbeck, C. and J. Z. Simon (2020) Continuous Speech Processing, Curr Op
+Physiol 18:25–31. PDF at
+https://www.isr.umd.edu/Labs/CSSL/simonlab/pubs/Brodbeck+SimonCurrOpPhysiol2020.pdf
+(review paper)
+
+- Eelbrain toolkit (relies on men-python)
+Brodbeck, C., P. Das, J. P. Kulasingham, S. Bhattasali, P. Gaston, P. Resnik,
+and J. Z. Simon (2021) Eelbrain: A Python Toolkit for Time-Continuous Analysis
+with Temporal Response Functions, bioRxiv 2021.08.01.454687. DOI:
+https://doi.org/10.1101/2021.08.01.454687
+(a potentially better eelbrain citation)
+
+- An older but short review paper that compares results from 4 different but
+related MEG studies regarding selective auditory attention and neural scene
+segregation: Simon, J. Z. (2015) The Encoding of Auditory Objects in Auditory
+Cortex: Insights from Magnetoencephalography, Intl J Psychophysiol 95, 184–190.
+PDF at
+https://www.isr.umd.edu/Labs/CSSL/simonlab/pubs/Ding+SimonFrontHumNeurosci2014.pdf
+
+
+next steps
+
+reanalyze the power 
+mixed effects model using average power as well just to see difference
+
+which plots should go into paper and poster
+
+tell that story using figures 
+
+~5 total figs 
+
+give an organizerd presentation end of march
+
+look at stimuli for next experiment
+
+Tuesday at 2
+
+
+

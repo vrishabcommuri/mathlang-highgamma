@@ -1,0 +1,9 @@
+
+python3 singlespeaker_jameslang_trfs.py
+python3 singlespeaker_jamesmath_trfs.py
+python3 singlespeaker_katelang_trfs.py
+python3 singlespeaker_katemath_trfs.py
+python3 cocktail_katemath_trfs.py
+python3 cocktail_jamesmath_trfs.py
+python3 cocktail_katelang_trfs.py
+python3 cocktail_jameslang_trfs.py
