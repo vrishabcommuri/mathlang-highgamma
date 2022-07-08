@@ -137,7 +137,6 @@ def get_carrier(loadfunc=load_single_wav,
     # reformat NDVar so that it has a Case dimension -- this is required for the
     # boosting code.
     carrier = eel.NDVar(carrier.x.reshape(1,-1), (eel.Case, carrier.time))
-
     # TODO this should not be hard coded
     # cocktailregion = 'outer'
     cocktailregion = 'both'
@@ -208,7 +207,6 @@ def get_envelope(loadfunc=load_single_spectrogram, numsec=180, *args):
     # cast to an eelbrain ndvar
     time = eel.UTS(0, 1/fsfilt, (numsec)*fsfilt) 
     predictor = eel.NDVar(hfe.x.reshape(1,-1), (eel.Case, time))
-
     # TODO this should not be hard coded
     # cocktailregion = 'outer'
     cocktailregion = 'both'
@@ -302,6 +300,8 @@ def get_james_math_carrier(single_speaker=True, foreground=True):
         math_carrier = eel.concatenate([math_carrier_first, math_carrier_second], dim='time')
 
     return math_carrier
+
+
 @lru_cache(maxsize=None)
 def get_james_lang_carrier(single_speaker=True, foreground=True):
     if single_speaker:
@@ -622,7 +622,6 @@ def _write_res(res: eel.BoostingResult, output_folder: str, subject: str, predst
     with open(f'{output_folder}/Source/boosting.txt', 'a+') as f:
         f.write(f'{subject} {predstr} {outstr} {modelstr} r max = {res.r.max():.4g}\n')
         f.write(f'{subject} {predstr} {outstr} {modelstr} max = {res.h.max():.4g}\n')
-        
 
 def permutePred(ds, predstr, nperm=2):
     """Permutes the given predictor""" 
@@ -637,6 +636,7 @@ def permutePred(ds, predstr, nperm=2):
         xnd.name = predstr+'_p'+str(npr)
         ds[xnd.name] = xnd
     return ds
+        
 
 def boostWrap(ds: eel.Dataset, predlist: list, output_folder: str, subject: str, outstr: str, bFrac: list, basislen: float, partitions: int, rstr: str = 'source', permflag: bool = True):
     """Boosts the given predictor. If permflag == True, boosts permuted model also"""

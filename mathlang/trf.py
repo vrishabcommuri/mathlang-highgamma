@@ -20,13 +20,8 @@ boostingFraction = [-0.041,0.21]
 basislen = 0.004
 partitions = 4
 
-
-def boost_roi(subdata, roi="cortex", predictors=["carrier", "envelope"], 
-              epochrange=list(range(0,10)), outstr="", 
-              pcloadf=get_mathlang_carrier, 
-              peloadf=get_mathlang_envelope, cocktail=True, permute=False,
-              cocktailregion='both'):
-
+def create_ds(subdata, roi, predictors, epochrange, outstr, 
+            pcloadf, peloadf, cocktail, permute, cocktailregion):
     if roi == "cortex":
         ctxll = ['inferiortemporal', 'middletemporal',
                        'superiortemporal','bankssts', 'transversetemporal']
@@ -130,7 +125,10 @@ def boost_roi(subdata, roi="cortex", predictors=["carrier", "envelope"],
     if len(predictorlist) == 0:
         predictorlist = predictors
 
-        
+    return ds, predictorlist
+
+
+def boost(ds, predictorlist, roi, outstr, subdata, permute):
     print("boosting")
     resM, _ = boostWrap(ds, predictorlist, outpath, subdata.name, 
                            f'vol-7-{roi}{outstr}', boostingFraction, basislen, 
@@ -149,5 +147,47 @@ def boost_roi(subdata, roi="cortex", predictors=["carrier", "envelope"],
                            outpath, subdata.name, f'vol-7-{roi}{outstr}', 
                            boostingFraction, basislen, partitions, 'source', 
                            False)
+
+    return resM
+
+
+def boost_roi(subdata, roi="cortex", predictors=["carrier", "envelope"], 
+              epochrange=list(range(0,10)), outstr="", 
+              pcloadf=get_james_math_carrier, 
+              peloadf=get_james_math_envelope, cocktail=True, permute=False,
+              cocktailregion='both'):
+
+    
+    ds, predictorlist = create_ds(subdata, roi, predictors, epochrange, outstr, 
+            pcloadf, peloadf, cocktail, permute, cocktailregion)
+        
+    resM = boost(ds, predictorlist, roi, outstr, subdata, permute)
+    
+    return resM
+
+
+def boost_multiple_roi(subdata, roi="cortex", 
+            predictors=["carrier", "envelope"], 
+            epochrange1=list(range(0,10)), epochrange2=list(range(10,20)), 
+            outstr="", 
+            pcloadf1=get_james_math_carrier, 
+            peloadf1=get_james_math_envelope, 
+            pcloadf2=get_james_lang_carrier, 
+            peloadf2=get_james_lang_envelope, 
+            cocktail=True, permute=False,
+            cocktailregion='both'):
+    print('start boosting multiple')
+    ds1, predictorlist = create_ds(subdata, roi, predictors, epochrange1, 
+            outstr, pcloadf1, peloadf1, cocktail, permute, cocktailregion)
+
+    ds2, _ = create_ds(subdata, roi, predictors, epochrange2, outstr, 
+            pcloadf2, peloadf2, cocktail, permute, cocktailregion)
+
+    ds1['source'] = eel.concatenate([ds1['source'], ds2['source']], dim='time')
+    for predictor in predictorlist:
+        ds1[predictor] = eel.concatenate([ds1[predictor], ds2[predictor]], 
+        dim='time')
+        
+    resM = boost(ds1, predictorlist, roi, outstr, subdata, permute)
     
     return resM
