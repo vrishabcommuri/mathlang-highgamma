@@ -17,6 +17,7 @@ COCKTAIL_NUMTRIALS = 6
 COCKTAIL_TRIAL_LEN = 18 # 18 seconds long
 
 
+
 def load_single_wav(trialnum, stimdir, condition):
     # trial numbers in files are given in the form trial00, trial01, etc. this
     # simply converts an integer, say, int(1) into a string of the form "01"
@@ -95,6 +96,38 @@ def load_single_spectrogram(trialnum, stimdir, condition):
     Sxx = Sxx.astype(np.float64)
 
     return f, fs, Sxx
+
+
+def load_single_hdf5(trialnum, stimdir, condition):
+    from expyfun.io import read_hdf5
+
+    # trial numbers in files are given in the form trial00, trial01, etc. this
+    # simply converts an integer, say, int(1) into a string of the form "01"
+    trialnum = str(trialnum).zfill(2)
+
+    trialprefix = ""
+    if stimdir == COCKTAIL_STIMFOLDER:
+        trialprefix = condition[-2:] + "_"
+        condition = condition[:-3]
+
+    stim_file = datadir / f"stimuli_hdf5files/{stimdir}/{condition}/{trialprefix}trial{str(trialnum).zfill(2)}_bands_reduced_model.hdf5"
+
+    data = read_hdf5(stim_file)
+    # read brainstem response
+    audio = data['bs_mod_all'][0]
+    audio = audio.astype(np.float64)
+    fs = 10e3
+
+    fsfilt = 500
+    decimation_factor = fs/fsfilt
+
+    x = scipy.signal.decimate(audio, int(decimation_factor))
+    fstrue = fs/int(decimation_factor)
+    wav = eel.NDVar(x, eel.UTS(0, 1/fstrue, len(x)))
+
+    wav = eel.resample(wav, fsfilt)
+    wav = wav.sub(time=(0,18))
+    return wav
 
 
 def get_carrier(loadfunc=load_single_wav, 
@@ -303,6 +336,47 @@ def get_james_math_carrier(single_speaker=True, foreground=True):
 
 
 @lru_cache(maxsize=None)
+def get_james_math_cochlear(single_speaker=True, foreground=True):
+    if single_speaker:
+        math_carrier = combine_n_carriers(load_single_hdf5,
+                                        "01jamesMATH",
+                                        SINGLE_SPEAKER_STIMFOLDER,
+                                        SINGLE_SPEAKER_TRIAL_LEN,
+                                        SINGLE_SPEAKER_NUMTRIALS)
+
+    else:
+        if foreground:
+            math_carrier_first = combine_n_carriers(load_single_hdf5,
+                                            "08jamesMATH_fg",
+                                            COCKTAIL_STIMFOLDER,
+                                            COCKTAIL_TRIAL_LEN,
+                                            COCKTAIL_NUMTRIALS)
+
+            math_carrier_second = combine_n_carriers(load_single_hdf5,
+                                            "12jamesMATH_fg",
+                                            COCKTAIL_STIMFOLDER,
+                                            COCKTAIL_TRIAL_LEN,
+                                            COCKTAIL_NUMTRIALS)
+        else:
+            math_carrier_first = combine_n_carriers(load_single_hdf5,
+                                            "08jamesMATH_bg",
+                                            COCKTAIL_STIMFOLDER,
+                                            COCKTAIL_TRIAL_LEN,
+                                            COCKTAIL_NUMTRIALS)
+
+            math_carrier_second = combine_n_carriers(load_single_hdf5,
+                                            "12jamesMATH_bg",
+                                            COCKTAIL_STIMFOLDER,
+                                            COCKTAIL_TRIAL_LEN,
+                                            COCKTAIL_NUMTRIALS)
+
+        math_carrier = eel.concatenate([math_carrier_first, math_carrier_second], dim='time')
+
+    return math_carrier
+
+
+
+@lru_cache(maxsize=None)
 def get_james_lang_carrier(single_speaker=True, foreground=True):
     if single_speaker:
         lang_carrier = combine_n_carriers(load_single_wav,
@@ -340,6 +414,46 @@ def get_james_lang_carrier(single_speaker=True, foreground=True):
         lang_carrier = eel.concatenate([lang_carrier_first, lang_carrier_second], dim='time')
 
     return lang_carrier
+
+@lru_cache(maxsize=None)
+def get_james_lang_cochlear(single_speaker=True, foreground=True):
+    if single_speaker:
+        lang_carrier = combine_n_carriers(load_single_hdf5,
+                                        "02jamesLANG",
+                                        SINGLE_SPEAKER_STIMFOLDER,
+                                        SINGLE_SPEAKER_TRIAL_LEN,
+                                        SINGLE_SPEAKER_NUMTRIALS)
+
+    else:
+        if foreground:
+            lang_carrier_first = combine_n_carriers(load_single_hdf5,
+                                            "07jamesLANG_fg",
+                                            COCKTAIL_STIMFOLDER,
+                                            COCKTAIL_TRIAL_LEN,
+                                            COCKTAIL_NUMTRIALS)
+
+            lang_carrier_second = combine_n_carriers(load_single_hdf5,
+                                            "11jamesLANG_fg",
+                                            COCKTAIL_STIMFOLDER,
+                                            COCKTAIL_TRIAL_LEN,
+                                            COCKTAIL_NUMTRIALS)
+        else:
+            lang_carrier_first = combine_n_carriers(load_single_hdf5,
+                                            "07jamesLANG_bg",
+                                            COCKTAIL_STIMFOLDER,
+                                            COCKTAIL_TRIAL_LEN,
+                                            COCKTAIL_NUMTRIALS)
+
+            lang_carrier_second = combine_n_carriers(load_single_hdf5,
+                                            "11jamesLANG_bg",
+                                            COCKTAIL_STIMFOLDER,
+                                            COCKTAIL_TRIAL_LEN,
+                                            COCKTAIL_NUMTRIALS)
+
+        lang_carrier = eel.concatenate([lang_carrier_first, lang_carrier_second], dim='time')
+
+    return lang_carrier
+
 
 @lru_cache(maxsize=None)
 def get_kate_math_carrier(single_speaker=True, foreground=True):
@@ -625,15 +739,16 @@ def _write_res(res: eel.BoostingResult, output_folder: str, subject: str, predst
 
 def permutePred(ds, predstr, nperm=2):
     """Permutes the given predictor""" 
+    print(f"permuting predictor {nperm} times")
     for npr in range(0,nperm):
         xnd = ds[predstr].copy()
         if ds[predstr].has_case:
             for j in range(0,len(ds[predstr])):
-                aa = np.roll(ds[predstr][j].x, int((npr+1) * len(xnd[j]) / (nperm+1)))
-                xnd[j] = eel.NDVar(aa,dims=xnd[j].dims,name=predstr+'_p'+str(npr))
+                aa = np.roll(ds[predstr][j].x, int((npr+1) * (len(xnd[j]) / (nperm+1)) ))
+                xnd[j] = eel.NDVar(aa, dims=xnd[j].dims, name=predstr+'_p' + str(npr))
         else:
-            xnd.x = np.roll(xnd.x, int((npr + 1) * len(xnd) / (nperm + 1)))
-        xnd.name = predstr+'_p'+str(npr)
+            xnd.x = np.roll(xnd.x, int((npr + 1) * (len(xnd) / (nperm + 1))))
+        xnd.name = predstr + '_p' + str(npr)
         ds[xnd.name] = xnd
     return ds
         

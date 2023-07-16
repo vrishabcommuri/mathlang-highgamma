@@ -187,7 +187,9 @@ def boost_multiple_roi(subdata, roi="cortex",
     for predictor in predictorlist:
         ds1[predictor] = eel.concatenate([ds1[predictor], ds2[predictor]], 
         dim='time')
-        
+    
+    print(ds1)
+
     resM = boost(ds1, predictorlist, roi, outstr, subdata, permute)
     
     return resM
